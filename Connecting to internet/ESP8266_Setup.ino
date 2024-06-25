@@ -1,8 +1,14 @@
 #include <ESP8266WiFi.h>
+#include <ThingSpeak.h>
 
 const char* ssid = "WIFI_SSID";
 const char* password = "WIFI_PASSWORD";
-String newHostname = "New name for the IoT device (optional)";
+String newHostname = "IoT Solar Tree";
+
+const char* apiWriteKey = "API_KEY"; // Replace with your actual API Key
+const uint8_t channelId = 9999999; // Replace with your actual Channel ID
+
+WiFiClient client;
 
 void setup() {
   Serial.begin(115200);
@@ -19,5 +25,20 @@ void setup() {
 }
 
 void loop() {
-  // Your other code here
+  // Receive data from Arduino Uno over serial communication
+  if (Serial.available() > 0) {
+    String dataString = Serial.readStringUntil('\n'); // Read data string sent by Arduino
+
+    // Send data to ThingSpeak
+    ThingSpeak.begin(client, apiWriteKey);
+    int httpResponseCode = ThingSpeak.write(channelId, dataString);
+    if(httpResponseCode == 200) {
+      Serial.println("Data sent to ThingSpeak!");
+    } else {
+      Serial.println("Error sending data: ");
+      Serial.println(httpResponseCode);
+    }
+    ThingSpeak.close();
+  }
+  delay(2000); // Adjust delay based on your data update frequency
 }
