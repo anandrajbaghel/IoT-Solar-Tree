@@ -1,7 +1,7 @@
 #include <SoftwareSerial.h>
-#include <stdlib.h>
+#include <ArduinoJson.h> // Include ArduinoJson library
 
-// Define sensor pins
+// Define sensor pins (adjust based on your setup)
 const int currentSolarPV = A0;
 const int voltageSolarPV = A1;
 const int currentBattery = A2;
@@ -13,16 +13,14 @@ const int temperatureSensor = A5;
 const int espRx = 2;
 const int espTx = 3;
 
-// Define variables
 SoftwareSerial ESP8266(espRx, espTx);
-String dataString;
+StaticJsonDocument<256> jsonDoc; // Allocate memory for JSON data (adjust capacity as needed)
 
 void setup() {
-  Serial.begin(115200);
-  ESP8266.begin(115200);
+  Serial.begin(9600);
+  ESP8266.begin(9600);
 
-  // Configuring sensor pins as inputs
-
+  // Configure sensor pins as inputs
   pinMode(currentSolarPV, INPUT);
   pinMode(voltageSolarPV, INPUT);
   pinMode(currentBattery, INPUT);
@@ -32,24 +30,32 @@ void setup() {
 }
 
 void loop() {
-  // Read sensor values
+  // Read sensor values
   int currentSolarPV_raw = analogRead(currentSolarPV);
-  float voltageSolarPV_raw = analogRead(voltageSolarPV) * (5.0 / 1023.0); // Convert to voltage (adjust based on sensor range)
+  float voltageSolarPV_raw = analogRead(voltageSolarPV) * (5.0 / 1023.0);
   int currentBattery_raw = analogRead(currentBattery);
-  float voltageBattery_raw = analogRead(voltageBattery) * (5.0 / 1023.0); // Convert to voltage (adjust based on sensor range)
+  float voltageBattery_raw = analogRead(voltageBattery) * (5.0 / 1023.0);
   int currentLED_raw = analogRead(currentLED);
-  float temperature_raw = analogRead(temperatureSensor) * (5.0 / 1023.0) * (100.0 / 5.0); // Convert to temperature (adjust based on sensor range)
+  float temperature_raw = analogRead(temperatureSensor) * (5.0 / 1023.0) * (100.0 / 5.0);
 
-  // Prepare data string (e.g., JSON format)
-  dataString = "{";
-  dataString += "\"currentSolarPV\":" + String(currentSolarPV_raw, 2); // Display voltage with 2 decimal places
-  dataString += ",\"voltageSolarPV\":" + String(voltageSolarPV_raw, 2);
-  dataString += ",\"currentBattery\":" + String(currentBattery_raw, 2);
-  dataString += ",\"voltageBattery\":" + String(voltageBattery_raw, 2);
-  dataString += ",\"currentLED\":" + String(currentLED_raw, 2);
-  dataString += ",\"temperatureSensor\":" + String(temperature_raw, 2);
-  dataString += "}";
+  // Create a JSON object
+  JsonObject root = jsonDoc.to<JsonObject>();
+  root["currentSolarPV"] = currentSolarPV_raw;
+  root["voltageSolarPV"] = voltageSolarPV_raw;
+  root["currentBattery"] = currentBattery_raw;
+  root["voltageBattery"] = voltageBattery_raw;
+  root["currentLED"] = currentLED_raw;
+  root["temperatureSensor"] = temperature_raw;
 
-  Serial.println(dataString); // Send data string to ESP8266 over serial
-  delay(2000); // Read sensors and transmit data every alternate second
+  // Serialize JSON data to a String
+  String jsonString;
+  serializeJson(jsonDoc, jsonString);
+
+  // Print JSON data to serial monitor for debugging (optional)
+  Serial.println(jsonString);
+
+  // Send JSON data to ESP8266
+  ESP8266.println(jsonString);
+
+  delay(15000); // Read sensor data every 15 seconds
 }
