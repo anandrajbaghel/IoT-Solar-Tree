@@ -1,44 +1,98 @@
 #include <ESP8266WiFi.h>
-#include <ThingSpeak.h>
+#include "ThingSpeak.h"
+#include <ArduinoJson.h>
 
-const char* ssid = "WIFI_SSID";
-const char* password = "WIFI_PASSWORD";
+const char* ssid = "ssid";
+const char* password = "password";
 String newHostname = "IoT Solar Tree";
+WiFiClient  client;
 
-const char* apiWriteKey = "API_KEY"; // Replace with your actual API Key
-const uint8_t channelId = 9999999; // Replace with your actual Channel ID
+unsigned long myChannelNumber = 000000;
+const char * myWriteAPIKey = "DJFJ674FCTY765";
 
-WiFiClient client;
+StaticJsonDocument<256> jsonDoc; // Allocate memory for JSON data (adjust capacity as needed)
+
+int currentSolarPV;
+float voltageSolarPV;
+int currentBattery;
+float voltageBattery;
+int currentLED;
+float temperatureSensor;
+String myStatus = "";
 
 void setup() {
-  Serial.begin(115200);
-  WiFi.mode(WIFI_STA);
+  Serial.begin(9600);
+  while (!Serial) {
+    ; // wait for serial port to connect
+  }
+  
   WiFi.hostname(newHostname.c_str());
   WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("\nWiFi connected!");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+  ThingSpeak.begin(client);
 }
 
 void loop() {
-  // Receive data from Arduino Uno over serial communication
-  if (Serial.available() > 0) {
-    String dataString = Serial.readStringUntil('\n'); // Read data string sent by Arduino
-
-    // Send data to ThingSpeak
-    ThingSpeak.begin(client, apiWriteKey);
-    int httpResponseCode = ThingSpeak.write(channelId, dataString);
-    if(httpResponseCode == 200) {
-      Serial.println("Data sent to ThingSpeak!");
-    } else {
-      Serial.println("Error sending data: ");
-      Serial.println(httpResponseCode);
-    }
-    ThingSpeak.close();
+  // Connect or reconnect to WiFi
+  if(WiFi.status() != WL_CONNECTED){
+    delay(500);
+    Serial.print(".");
+    while(WiFi.status() != WL_CONNECTED){
+      Serial.print(".");
+      delay(5000);     
+    } 
+    Serial.println("\nWiFi connected!");
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
   }
-  delay(2000); // Adjust delay based on your data update frequency
+
+  // Check for available data from Arduino
+  if (Serial.available() > 0) {
+    // Read JSON data string from Arduino
+    String jsonString = Serial.readStringUntil('\n');
+    jsonString.trim();
+
+    // Parse JSON data
+    deserializeJson(jsonDoc, jsonString);
+
+    // Access sensor values from the JSON object
+    JsonObject root = jsonDoc.as<JsonObject>();
+    currentSolarPV = root["currentSolarPV"];
+    voltageSolarPV = root["voltageSolarPV"];
+    currentBattery = root["currentBattery"];
+    voltageBattery = root["voltageBattery"];
+    currentLED = root["currentLED"];
+    temperatureSensor = root["temperatureSensor"];
+
+    ThingSpeak.setField(1, currentSolarPV);
+    ThingSpeak.setField(2, voltageSolarPV);
+    ThingSpeak.setField(3, currentBattery);
+    ThingSpeak.setField(4, voltageBattery);
+    ThingSpeak.setField(5, currentLED);
+    ThingSpeak.setField(6, temperatureSensor);
+
+    myStatus = String("Data Updated");
+  } else
+      myStatus = String("Error - ;(");
+  
+  // set the status
+  ThingSpeak.setStatus(myStatus);
+
+  Serial.println(currentSolarPV);
+  Serial.println(voltageSolarPV);
+  Serial.println(currentBattery);
+  Serial.println(voltageBattery);
+  Serial.println(currentLED);
+  Serial.println(temperatureSensor);
+  
+  // write to the ThingSpeak channel
+  int x = ThingSpeak.writeFields(myChannelNumber, myWriteAPIKey);
+  if(x == 200){
+    Serial.println("Channel update successful.");
+  }
+  else{
+    Serial.println("Problem updating channel. HTTP error code " + String(x));
+  }
+
+  delay(15000); // Check for data every 15 seconds
+  
 }
