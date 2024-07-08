@@ -2,22 +2,23 @@
 #include "ThingSpeak.h"
 #include <ArduinoJson.h>
 
-const char* ssid = "ssid";
-const char* password = "password";
+const char* ssid = "Wifi__00";
+const char* password = "cctv4020";
 String newHostname = "IoT Solar Tree";
 WiFiClient  client;
 
-unsigned long myChannelNumber = 000000;
-const char * myWriteAPIKey = "DJFJ674FCTY765";
+unsigned long myChannelNumber = 0000000;
+const char * myWriteAPIKey = "JKKDSFKKJ786";
 
-StaticJsonDocument<256> jsonDoc; // Allocate memory for JSON data (adjust capacity as needed)
+StaticJsonDocument<512> jsonDoc; // Allocate memory for JSON data (adjust capacity as needed)
 
 int currentSolarPV;
 float voltageSolarPV;
 int currentBattery;
 float voltageBattery;
 int currentLED;
-float temperatureSensor;
+float temperature;
+float humidity;
 String myStatus = "";
 
 void setup() {
@@ -28,7 +29,7 @@ void setup() {
   
   WiFi.hostname(newHostname.c_str());
   WiFi.begin(ssid, password);
-  ThingSpeak.begin(client);
+  ThingSpeak.begin(client);  // Initializing ThingSpeak
 }
 
 void loop() {
@@ -61,18 +62,21 @@ void loop() {
     currentBattery = root["currentBattery"];
     voltageBattery = root["voltageBattery"];
     currentLED = root["currentLED"];
-    temperatureSensor = root["temperatureSensor"];
+    temperature = root["temperature"];
+    humidity = root["humidity"];
 
     ThingSpeak.setField(1, currentSolarPV);
     ThingSpeak.setField(2, voltageSolarPV);
     ThingSpeak.setField(3, currentBattery);
     ThingSpeak.setField(4, voltageBattery);
     ThingSpeak.setField(5, currentLED);
-    ThingSpeak.setField(6, temperatureSensor);
+    ThingSpeak.setField(6, temperature);
+    ThingSpeak.setField(7, humidity);
 
     myStatus = String("Data Updated");
   } else
-      myStatus = String("Error - ;(");
+    myStatus = String("Error - ;(");
+      
   
   // set the status
   ThingSpeak.setStatus(myStatus);
@@ -82,7 +86,8 @@ void loop() {
   Serial.println(currentBattery);
   Serial.println(voltageBattery);
   Serial.println(currentLED);
-  Serial.println(temperatureSensor);
+  Serial.println(temperature);
+  Serial.println(humidity);
   
   // write to the ThingSpeak channel
   int x = ThingSpeak.writeFields(myChannelNumber, myWriteAPIKey);
