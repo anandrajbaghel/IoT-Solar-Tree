@@ -1,51 +1,58 @@
 #include <SoftwareSerial.h>
-#include <ArduinoJson.h> // Include ArduinoJson library
+#include <ArduinoJson.h>
+#include <DHT.h>
 
-// Define sensor pins (adjust based on your setup)
+#define DHTPIN 3 // Pin where the DHT sensor is connected
+#define DHTTYPE DHT11
+
+// Defining sensor pins
 const int currentSolarPV = A0;
 const int voltageSolarPV = A1;
 const int currentBattery = A2;
 const int voltageBattery = A3;
 const int currentLED = A4;
-const int temperatureSensor = A5;
 
-// Define ESP8266 communication pins
+DHT dht(DHTPIN, DHTTYPE);
+
+// Defining ESP8266 communication pins
 const int espRx = 2;
 const int espTx = 3;
 
 SoftwareSerial ESP8266(espRx, espTx);
-StaticJsonDocument<256> jsonDoc; // Allocate memory for JSON data (adjust capacity as needed)
+StaticJsonDocument<512> jsonDoc; // Allocate memory for JSON data (adjust capacity as needed)
 
 void setup() {
+  dht.begin();
   Serial.begin(9600);
   ESP8266.begin(9600);
-
-  // Configure sensor pins as inputs
+  // Configuring sensor pins as inputs
   pinMode(currentSolarPV, INPUT);
   pinMode(voltageSolarPV, INPUT);
   pinMode(currentBattery, INPUT);
   pinMode(voltageBattery, INPUT);
   pinMode(currentLED, INPUT);
-  pinMode(temperatureSensor, INPUT);
 }
 
 void loop() {
-  // Read sensor values
+  
+  // Reading sensor values
   int currentSolarPV_raw = analogRead(currentSolarPV);
   float voltageSolarPV_raw = analogRead(voltageSolarPV) * (5.0 / 1023.0);
   int currentBattery_raw = analogRead(currentBattery);
   float voltageBattery_raw = analogRead(voltageBattery) * (5.0 / 1023.0);
   int currentLED_raw = analogRead(currentLED);
-  float temperature_raw = analogRead(temperatureSensor) * (5.0 / 1023.0) * (100.0 / 5.0);
+  float temperature_raw = dht.readTemperature();
+  float humidity_raw = dht.readHumidity();
 
-  // Create a JSON object
+  // Creating a JSON object
   JsonObject root = jsonDoc.to<JsonObject>();
   root["currentSolarPV"] = currentSolarPV_raw;
   root["voltageSolarPV"] = voltageSolarPV_raw;
   root["currentBattery"] = currentBattery_raw;
   root["voltageBattery"] = voltageBattery_raw;
   root["currentLED"] = currentLED_raw;
-  root["temperatureSensor"] = temperature_raw;
+  root["temperature"] = temperature_raw;
+  root["humidity"] = humidity_raw;
 
   // Serialize JSON data to a String
   String jsonString;
