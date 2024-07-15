@@ -5,16 +5,17 @@
 #define DHTPIN 3 // Pin where the DHT sensor is connected
 #define DHTTYPE DHT11
 
-// Defining sensor pins
+// Define sensor pins (adjust based on your setup)
 const int currentSolarPV = A0;
 const int voltageSolarPV = A1;
 const int currentBattery = A2;
 const int voltageBattery = A3;
 const int currentLED = A4;
+const float voltage_factor = 5.1;
 
 DHT dht(DHTPIN, DHTTYPE);
 
-// Defining ESP8266 communication pins
+// Define ESP8266 communication pins
 const int espRx = 2;
 const int espTx = 3;
 
@@ -25,7 +26,8 @@ void setup() {
   dht.begin();
   Serial.begin(9600);
   ESP8266.begin(9600);
-  // Configuring sensor pins as inputs
+
+  // Configure sensor pins as inputs
   pinMode(currentSolarPV, INPUT);
   pinMode(voltageSolarPV, INPUT);
   pinMode(currentBattery, INPUT);
@@ -34,17 +36,21 @@ void setup() {
 }
 
 void loop() {
-  
-  // Reading sensor values
-  int currentSolarPV_raw = analogRead(currentSolarPV);
-  float voltageSolarPV_raw = analogRead(voltageSolarPV) * (5.0 / 1023.0);
-  int currentBattery_raw = analogRead(currentBattery);
-  float voltageBattery_raw = analogRead(voltageBattery) * (5.0 / 1023.0);
-  int currentLED_raw = analogRead(currentLED);
+
+  // Read sensor values
+  // Solar
+  int currentSolarPV_raw = (analogRead(currentSolarPV) * (5.0 / 1023.0) - 2.5) / 0.185;
+  float voltageSolarPV_raw = voltage_factor * analogRead(voltageSolarPV) * (5.0 / 1023.0);
+  // Battery
+  int currentBattery_raw = (analogRead(currentBattery) * (5.0 / 1023.0) - 2.5) / 0.185;
+  float voltageBattery_raw = voltage_factor * analogRead(voltageBattery) * (5.0 / 1023.0);
+  // LED
+  int currentLED_raw = (analogRead(currentLED) * (5.0 / 1023.0) - 2.5) / 0.185;
+  // Temperature and Humidity
   float temperature_raw = dht.readTemperature();
   float humidity_raw = dht.readHumidity();
 
-  // Creating a JSON object
+  // Create a JSON object
   JsonObject root = jsonDoc.to<JsonObject>();
   root["currentSolarPV"] = currentSolarPV_raw;
   root["voltageSolarPV"] = voltageSolarPV_raw;
