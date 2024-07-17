@@ -20,8 +20,8 @@ This project demonstrates the creation of an IoT Solar Tree using Arduino and ES
    - Ensure all connections are secure and powered correctly.
 
 2. *Software Setup*:
-   - Upload the Arduino sketch (*.ino) to the Arduino Uno.
-   - Upload the ESP8266 sketch (*.ino) to the Arduino Uno.
+   - Upload the Arduino sketch (.ino) to the Arduino Uno.
+   - Upload the ESP8266 sketch (.ino) to the Arduino Uno.
    - Configure WiFi credentials and any necessary API keys for IoT communication.
    - Set up the required libraries for sensor data processing and communication.
 
