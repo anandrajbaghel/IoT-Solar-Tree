@@ -6,7 +6,7 @@ This project demonstrates the creation of an IoT Solar Tree using Arduino and ES
 
 - *Arduino Uno*: Microcontroller platform used for controlling and processing data.
 - *ESP8266*: WiFi module for enabling IoT capabilities.
-- *Sensors*: Various sensors for monitoring environmental parameters.
+- *Sensors*: Various sensors for monitoring solar tree performance and environmental parameters.
 
 ## Features
 
