@@ -1,4 +1,4 @@
-# IoT Solar Tree using Arduino & ESP8266
+# IoT Solar Tree
 
 This project demonstrates the creation of an IoT Solar Tree using Arduino and ESP8266. The Solar Tree concept involves using solar panels to harness solar energy and an IoT device to monitor and control various aspects of the setup.
 
