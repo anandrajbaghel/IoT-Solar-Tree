@@ -64,7 +64,7 @@ void loop() {
   String jsonString;
   serializeJson(jsonDoc, jsonString);
 
-  // Print JSON data to serial monitor for debugging (optional)
+  // Print JSON data to serial monitor for debugging (useful)
   Serial.println(jsonString);
 
   // Send JSON data to ESP8266
