@@ -1,17 +1,24 @@
+// This code won't work
+// Since there is only one analog Pin A0 on ESP8266
+// I've tried using a multiplexer ADS1115 but there was some exception I tried to decode the stack trace to
+// understand what was going on but unfortunately the same exception was getting printed on the Serial Monitor.
+// If you know or find the solution then please ping me:)
+// At most I used one Analog Sensor and one DHT sensor(this one works on another pins)
+
 #include <ESP8266WiFi.h>
 #include "ThingSpeak.h"
 #include <DHT.h>
 
-#define DHTPIN D5 // Pin where the DHT sensor is connected
+#define DHTPIN D3 // Pin where the DHT sensor is connected
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
 
 // Defining sensor pins
-const int currentSolarPV = D0;
-const int voltageSolarPV = D1;
-const int currentBattery = D2;
-const int voltageBattery = D3;
-const int currentLED = D4;
+const int currentSolarPV = A0;
+const int voltageSolarPV = NaN;
+const int currentBattery = NaN;
+const int voltageBattery = NaN;
+const int currentLED = NaN;
 
 const char* ssid = "Wifi__00";
 const char* password = "cctv4020";
